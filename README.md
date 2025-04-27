@@ -7,7 +7,7 @@ It combines:
 - **Metadata analysis** (stars, last update, license, open issues)
 - **Static code scanning** (for risky functions like `eval()`, `exec()`, `pickle.load()` etc.)
 
-Result: a **Trust Score from 1 to 10**
+Result: **A Trust Score from 1 to 10**
 
 ---
 
