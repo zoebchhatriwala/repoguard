@@ -11,7 +11,10 @@ def run_cli():
 
     print(f"\nEvaluating repository: {args.repo_url}\n")
 
+    # Evaluate the repository using the provided URL and token
     evaluation = evaluate_repository(args.repo_url, github_token=args.token)
+
+    # Scan the codebase for suspicious files and long lines
     scan = scan_codebase(args.repo_url)
 
     # Print the evaluation score and reasons
@@ -29,25 +32,14 @@ def run_cli():
 
     # Get the number of suspicious files and long lines files
     len_suspicious_files = len(scan['suspicious_files'])
-    len_long_lines_files = len(scan['long_lines_files'])
 
     # Print the number of suspicious files and hits
     print(f" - Suspicious Files: {len_suspicious_files}")
 
     # Print suspicious files
     for file in scan['suspicious_files']:
-        print(f"   - {file}")
+        print(f"   - {file['filename']} (Suspicious Hits: {file['suspicious_hits']}, Long Lines: {file['long_lines']})")
 
-    # Print the total number of suspicious hits and long lines
-    print(f" - Long Lines (possible obfuscation): {len_long_lines_files}")
-
-    # Print long lines files
-    for file in scan['long_lines_files']:
-        print(f"   - {file}")
-
-    # Print the total number of suspicious hits
-    print(f" - Suspicious Hits: {scan['suspicious_hits']}")
-    
     # Optionally: Deduct points if code scan finds too much suspicious stuff
     if len_suspicious_files > 5:
         print("\nWarning: High number of suspicious files detected!")

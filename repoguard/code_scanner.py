@@ -14,6 +14,9 @@ SUSPICIOUS_PATTERNS = [
     r'\bmarshal\.',
     r'\bctypes\.',
     r'\binput\(',
+    r'\bopen\(',
+    r'\bexecfile\(',
+    r'\bcompile\(',
 ]
 
 # Max line length to detect obfuscation
@@ -58,8 +61,6 @@ def scan_codebase(repo_url):
     """
     tmp_dir = tempfile.mkdtemp()
     suspicious_files = []
-    long_lines_files = []
-    total_suspicious_hits = 0
 
     try:
         # Clone the repository
@@ -69,20 +70,26 @@ def scan_codebase(repo_url):
         for root, dirs, files in os.walk(tmp_dir):
             for file in files:
                 if file.endswith(('.py', '.js', '.sh', '.ts', '.tsx', '.jsx')):  # Scan common script files
+                    # Construct the full file path
                     filepath = os.path.join(root, file)
+
+                    # Scan the file for suspicious patterns
                     suspicious_hits, long_lines = scan_file(filepath)
 
-                    # If suspicious patterns or long lines are found, add to the list
-                    if suspicious_hits > 0: # Check for suspicious patterns
-                        suspicious_files.append(filepath)
-                        total_suspicious_hits += suspicious_hits
-                    if long_lines > 0: # Check for long lines
-                        long_lines_files.append(filepath)
-                        total_suspicious_hits += suspicious_hits
-                        
+                    # If there are suspicious hits or long lines, add to the list
+                    if suspicious_hits > 0 or long_lines > 0:
+                        suspicious_files.append({
+                            "filename": str.replace(filepath, tmp_dir + os.sep, '', 1),
+                            "suspicious_hits": suspicious_hits,
+                            "long_lines": long_lines,
+                        })
+
                 elif file.endswith(('.exe', '.dll', '.so')):  # Binary files are suspicious by default
-                    suspicious_files.append(filepath)
-                    total_suspicious_hits += 1
+                    suspicious_files.append({
+                        "filename": str.replace(filepath, tmp_dir + os.sep, '', 1),
+                        "suspicious_hits": 1,
+                        "long_lines": 0,
+                    })
 
 
     except subprocess.CalledProcessError:
@@ -93,6 +100,4 @@ def scan_codebase(repo_url):
 
     return {
         "suspicious_files": suspicious_files,
-        "long_lines_files": long_lines_files,
-        "suspicious_hits": total_suspicious_hits,
     }
