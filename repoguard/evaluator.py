@@ -1,4 +1,4 @@
-from .github_api import fetch_repo_info
+from repoguard.github_api import fetch_repo_info
 from datetime import datetime, timezone
 
 def calculate_days_since(date_str):

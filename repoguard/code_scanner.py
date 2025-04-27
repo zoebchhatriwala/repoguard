@@ -1,5 +1,3 @@
-# repoguard/code_scanner.py
-
 import os
 import re
 import tempfile
@@ -59,31 +57,42 @@ def scan_codebase(repo_url):
     Returns a summary dict.
     """
     tmp_dir = tempfile.mkdtemp()
-    suspicious_files = 0
+    suspicious_files = []
+    long_lines_files = []
     total_suspicious_hits = 0
-    total_long_lines = 0
 
     try:
+        # Clone the repository
         clone_repo(repo_url, tmp_dir)
 
+        # Walk through the cloned directory
         for root, dirs, files in os.walk(tmp_dir):
             for file in files:
-                if file.endswith(('.py', '.js', '.sh')):  # Scan common script files
+                if file.endswith(('.py', '.js', '.sh', '.ts', '.tsx', '.jsx')):  # Scan common script files
                     filepath = os.path.join(root, file)
                     suspicious_hits, long_lines = scan_file(filepath)
 
-                    if suspicious_hits > 0 or long_lines > 0:
-                        suspicious_files += 1
+                    # If suspicious patterns or long lines are found, add to the list
+                    if suspicious_hits > 0: # Check for suspicious patterns
+                        suspicious_files.append(filepath)
                         total_suspicious_hits += suspicious_hits
-                        total_long_lines += long_lines
+                    if long_lines > 0: # Check for long lines
+                        long_lines_files.append(filepath)
+                        total_suspicious_hits += suspicious_hits
+                        
+                elif file.endswith(('.exe', '.dll', '.so')):  # Binary files are suspicious by default
+                    suspicious_files.append(filepath)
+                    total_suspicious_hits += 1
+
 
     except subprocess.CalledProcessError:
+        # If the clone fails, we can assume the repo is not accessible or doesn't exist
         print(f"Failed to clone {repo_url}")
     finally:
         shutil.rmtree(tmp_dir)  # Clean up
 
     return {
         "suspicious_files": suspicious_files,
+        "long_lines_files": long_lines_files,
         "suspicious_hits": total_suspicious_hits,
-        "long_lines": total_long_lines
     }
