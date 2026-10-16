@@ -33,3 +33,12 @@ eggs/
 *.log
 *.tmp
 *.swp
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+repoguard_*/
